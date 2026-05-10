@@ -2,9 +2,25 @@
 
 IP Address: <br> 
 Attacker (Linux)           = 192.168.56.101 <br>
+Attacker (Windows)         = 192.168.56.103 <br>
 Victim (Metasploitable2)   = 192.168.56.102
 
+### List of Challenges done 
+
+**Section A** - 1, 2, 5, 7, 9, 10           <br>
+**Section B** - 11, 12, 13, 14, 16, 17      <br>
+**Section C** - 23, 29                      <br>
+
 # Section A - Basic Enumeration <br>
+## Challenge 1 - NetBIOS Enumeration
+Commands Used: **nbtstat -a 192.168.56.102**
+
+<img width="410" height="311" alt="image" src="https://github.com/user-attachments/assets/4c4285de-6973-4f79-9ab9-6cb1592407b3" />
+
+Findings: 
+- METASPLOITABLE <20> indicates that a file server is active.
+- MSBROWSE indicates that it manages the local network discovery. 
+
 ## Challenge 2 - Fast Nmap Scan
 Commands Used: **nmap -F 192.168.56.102**
 <img width="541" height="463" alt="image" src="https://github.com/user-attachments/assets/0d853f0b-63a8-4aab-bba1-5cd0ac302f03" /> <br> 
@@ -110,12 +126,20 @@ Findings:
 |Minimum Password Length: 5 | Minimum length of a password is set to 5 characters. Easier to guess |
 |Password Complexity: Disabled | The password is not forced to have special characters, uppercase and lowercase or numbers |
 
+
 ## Challenge 13 - NFS Exports
 Commands Used: **showmount -e 192.168.56.102** 
 <img width="275" height="85" alt="image" src="https://github.com/user-attachments/assets/cfb11e22-3bde-4227-a556-51d62ba3fba0" />
 
 Findings: "/*" indicates a full directory access for the attacker. 
 
+## Challenge 14 - SNMP NSE
+Commands Used:
+**nmap -sU -p 161 --script snmp-sysdescr 192.168.56.102**
+**nmap -sU -p 161 --script snmp-processes 192.168.56.102**
+<img width="551" height="382" alt="image" src="https://github.com/user-attachments/assets/be0dc0d2-9a95-4e2b-89ae-b8b893f28411" />
+
+Findings: Closed ports, cannot find anything.
 
 ## Challenge 16 - Version Detection
 Commands Used: **nmap -sV 192.168.56.102**
@@ -141,8 +165,29 @@ Findings:
 - "Network Distance: 1 Hop" is due to VirtualBox Environment, therefore no hops to routers or firewalls. 
 
 # Section C - Advanced Enumeration <br>
-## Challenge 
-## Challenge 
-## Challenge 
+## Challenge 23 - DNS Cache Snooping
+Commands Used: **dig example.com @192.168.56.102**
+<img width="605" height="556" alt="image" src="https://github.com/user-attachments/assets/56de6de0-b7c5-4919-9e1b-8d0fa6602262" />
 
+Findings: 
+
+| Test Parameter | Status | Finding / Result |
+| :--- | :--- | :--- |
+| **DNS Cache Snooping** | **Negative** | `ANSWER: 0`. No cached records were leaked for the queried domain. |
+| **Recursion Status** | **Positive** | `ra` flag identified. The server is configured to perform recursive lookups. |
+| **Information Disclosure** | **Minimal** | The server provided a list of 13 Root Hints (Authority Section) as a referral. |
+| **Service Availability** | **Active** | Port 53/UDP is open and responding to standard queries. |
+
+## Challenge 29 - SMTP Enumeration via Nmap
+Commands Used: <br>
+**nmap -p25 --script=smtp-enum-users 192.168.56.102** <br>
+**nmap -p25 --script=smtp-open-relay 192.168.56.102**
+<img width="637" height="434" alt="image" src="https://github.com/user-attachments/assets/6f53d73c-fa28-44c9-ae1f-bee45b9b6648" />
+
+Findings: 
+
+| Script | Result | Security Finding |
+| :--- | :--- | :--- |
+| **smtp-enum-users** | **Inconclusive** | Script error (Unhandled status code). Further manual testing required. |
+| **smtp-open-relay** | **Secure** | Confirmed: Server is **not** an open relay. |
 
